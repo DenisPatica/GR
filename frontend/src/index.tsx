@@ -1,23 +1,17 @@
-import React from 'react';
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Root from './components/Root';
+import React from "react";
 import ReactDOM from "react-dom/client";
-import './index.css';
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Root />,
-    children: [
-    ],
-  }
-]);
+import "./index.css";
+import App from "./App";
+import { BrowserRouter } from "react-router-dom";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
+
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>  
   </React.StrictMode>
 );

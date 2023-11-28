@@ -1,0 +1,14 @@
+.Page_Container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.Video_Feed{
+    height: 90%;
+    width: 90%;
+    background-color: black;
+}
