@@ -4,7 +4,7 @@ import "./videoPage.css";
 const videoPage = () => {
   return (
     <div className="Page_Container">
-      <video className="Video_Feed" controls src="https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4">
+      <video className="Video_Feed" autoPlay controls src="http://192.168.137.216:5000">
         
       </video>
     </div>
