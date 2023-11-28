@@ -5,7 +5,7 @@ import {
   currentUser,
   logout,
 } from "../controllers/UsersController";
-import { verify } from "../services/AuthenticationService";
+import { verify } from "../services/ActivitiesService";
 
 const router = express.Router();
 
