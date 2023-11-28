@@ -3,7 +3,7 @@ import express from "express";
 import {
   getWeather
 } from "../controllers/WeatherController";
-import { verify } from "../services/AuthenticationService";
+import { verify } from "../services/ActivitiesService";
 
 const router = express.Router();
 

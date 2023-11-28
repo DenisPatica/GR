@@ -1,6 +1,6 @@
 import * as React from "react";
 import "./App.css";
-import TabelPage from "./pages/TabelPage/tabelPage";
+import TablePage from "./pages/TablePage/TablePage";
 import VideoPage from "./pages/VideoPage/videoPage";
 import { Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar/Sidebar";
@@ -10,7 +10,7 @@ function App() {
     <Sidebar>
       <Routes>
         <Route path="/" element={<VideoPage />} />
-        <Route path="/tabel" element={<TabelPage />} />
+        <Route path="/tabel" element={<TablePage />} />
       </Routes>
     </Sidebar>
   );

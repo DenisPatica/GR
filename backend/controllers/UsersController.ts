@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import Blacklist from "../models/Blacklist";
+import ActivitiesEntry from "../models/ActivitiesEntry";
 import {
   getUserEntryById,
   getByEmail,
@@ -70,11 +70,11 @@ const logout = async (req: Request, res: Response) => {
     const authHeader = req.headers["authorization"];
     if (!authHeader) return res.sendStatus(204);
     const token = String(req?.headers?.authorization?.replace("Bearer ", ""));
-    const checkIfBlacklisted = await Blacklist.findOne({ token });
+    const checkIfBlacklisted = await ActivitiesEntry.findOne({ token });
 
     if (checkIfBlacklisted) return res.sendStatus(204);
 
-    const newBlacklist = new Blacklist({
+    const newBlacklist = new ActivitiesEntry({
       token,
     });
     await newBlacklist.save();

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import Blacklist from "../models/Blacklist";
+import ActivitiesEntry from "../models/ActivitiesEntry";
 import UserEntry from "../models/UserEntry";
 
 export async function verify(req: Request, res: Response, next: any) {
@@ -9,7 +9,7 @@ export async function verify(req: Request, res: Response, next: any) {
 
     if (!authHeader) return res.sendStatus(401);
     const token = authHeader.split(" ")[1];
-    const checkIfBlacklisted = await Blacklist.findOne({ token: token });
+    const checkIfBlacklisted = await ActivitiesEntry.findOne({ token: token });
 
     if (checkIfBlacklisted)
       return res
@@ -42,11 +42,6 @@ export async function verify(req: Request, res: Response, next: any) {
       }
     );
   } catch (err) {
-    res.status(500).json({
-      status: "error",
-      code: 500,
-      data: [],
-      message: "Internal Server Error",
-    });
+      console.log('Mongo save error')
   }
 }
