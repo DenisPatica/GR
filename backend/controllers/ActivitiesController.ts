@@ -1,5 +1,6 @@
 import {Request, Response} from "express";
 import ActivitiesEntry from "../models/ActivitiesEntry";
+import { PipelineStage } from "mongoose";
 
 const getTrueKey = ({obj}: { obj: { asleep: boolean, looking_away: boolean, distracted: boolean } }) => {
     for (const key in obj) {
@@ -9,16 +10,31 @@ const getTrueKey = ({obj}: { obj: { asleep: boolean, looking_away: boolean, dist
     return undefined;
 };
 export const add = async (req: Request, res: Response) => {
-    const {body} = req;
+    const { body } = req;
     const getFirstTruthyItem = getTrueKey({ obj: body });
 
-    const newActivity = new ActivitiesEntry({
-        activitiesType: getFirstTruthyItem || 'active',
-        createdAt: new Date()  // Though this is not needed as you have default set in the schema
-    });
+    try {
+        // Get the most recent activity
+        const latestActivity = await ActivitiesEntry.findOne().sort({ createdAt: -1 });
 
-    await newActivity.save()
-    res.status(200).send();
+        const now = new Date().getTime(); // Get current time as a timestamp
+
+// Check if the latest activity was created more than 1 second ago
+        if (!latestActivity || now - new Date(latestActivity.createdAt).getTime() > 1000) {
+            const newActivity = new ActivitiesEntry({
+                activitiesType: getFirstTruthyItem || 'active',
+                createdAt: new Date()
+            });
+
+            await newActivity.save();
+            res.status(200).send({ message: "Activity added successfully." });
+        } else {
+            res.status(200).send({ message: "Activity not added. Last activity was less than 1 second ago." });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "An error occurred while adding the activity." });
+    }
 };
 
 export const getActivity = async (req: Request, res: Response) => {
@@ -44,18 +60,47 @@ export const getActivity = async (req: Request, res: Response) => {
 };
 
 export const getActualActivity = async (req: Request, res: Response) => {
-    const thirtyMinutesAgo = new Date(new Date().getTime() - (30 * 60 * 1000)); // 30 minutes in milliseconds
+    const thirtyMinutesAgo = new Date(new Date().getTime() - (5 * 60 * 1000)); // 30 minutes in milliseconds
 
-    const pipeline30M = [
+    const pipeline30M: PipelineStage[] = [
         {
-            // Filter documents from the last 30 minutes
             $match: {
                 createdAt: { $gte: thirtyMinutesAgo }
             }
         },
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$createdAt" },
+                    month: { $month: "$createdAt" },
+                    day: { $dayOfMonth: "$createdAt" },
+                    hour: { $hour: "$createdAt" },
+                    minute: { $minute: "$createdAt" },
+                    tenSecondInterval: {
+                        $subtract: [
+                            { $second: "$createdAt" },
+                            { $mod: [{ $second: "$createdAt"}, 10] }
+                        ]
+                    }
+                },
+                doc: { $first: "$$ROOT" }
+            }
+        },
+        {
+            $sort: {
+                "_id.year": 1,
+                "_id.month": 1,
+                "_id.day": 1,
+                "_id.hour": 1,
+                "_id.minute": 1,
+                "_id.tenSecondInterval": 1
+            }
+        },
+        {
+            $replaceRoot: { newRoot: "$doc" }
+        }
     ];
 
-    // Execute the aggregation pipeline
     const activityInLast30M = await ActivitiesEntry.aggregate(pipeline30M);
-    res.status(200).send({data: {activitys: activityInLast30M}});
+    res.status(200).send({ data: { activities: activityInLast30M } });
 };
