@@ -1,34 +1,116 @@
 import React, {useEffect, useState} from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Doughnut } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement
+} from "chart.js";
+import { Doughnut, Line } from "react-chartjs-2";
 import {getActivities, getActualActivities} from "../../api/activities";
 import "./tablePage.css";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    LineElement,
+    PointElement,
+    ArcElement,
+    Tooltip,
+    Legend
+);
 
+interface ActivityItem {
+  _id: string;
+  activitiesType: string;
+  createdAt: string;
+  __v: number;
+}
+
+interface ProcessedData {
+  labels: string[];
+  data: (string | number)[]; // Assuming the data can be a mix of strings and numbers
+}
+
+function processActivitiesData(activities: ActivityItem[]): ProcessedData {
+  const timeLabels: string[] = [];
+  const activityData: (string | number)[] = [];
+
+  activities.forEach(activity => {
+    const activityTime = new Date(activity.createdAt);
+
+      const timeLabel = activityTime.toLocaleTimeString();
+
+      if (!timeLabels.includes(timeLabel)) {
+        timeLabels.push(timeLabel);
+      }
+
+      const activityValue = mapActivityTypeToValue(activity.activitiesType);
+      activityData.push(activityValue);
+
+  });
+  return { labels: timeLabels, data: activityData };
+}
+
+function mapActivityTypeToValue(activityType: string): string | number {
+  switch (activityType) {
+    case 'asleep':
+      return '1'; // Replace with the actual value you want to display
+    case 'looking_away':
+      return '2';
+    case 'distracted':
+      return '3';
+    case 'active':
+      return '4';
+    default:
+      return '1';
+  }
+}
 const TablePage = () => {
 
   const [activities, setActivities]=useState<any[] | null>(null)
-  const [actualActivities, setActualActivities]=useState<any[] | null>(null)
-
+  const [actualActivities, setActualActivities]=useState<any | null>(null)
+  const [actualStatus, setActualStatus]=useState(1);
 
     useEffect(() => {
       getActivities().then((resp) => setActivities(resp?.data?.activitys));
 
       const fetchActivities = () => {
-        getActualActivities().then((resp) => setActualActivities(resp?.data?.activitys));
-      };
+        getActualActivities().then((resp) => {
+          const activities = resp?.data?.activities;
+          if (activities) {
+            const processedData = processActivitiesData(activities);
+            const lastValue = activities[activities.length - 1];
+            console.log('lastValue', lastValue)
+            setActualStatus(lastValue.activitiesType === 'asleep' ? 1 : lastValue.activitiesType === 'active' ? 3 : 2 )
+            setActualActivities({
+              labels: processedData.labels,
+              datasets: [
+                {
+                  label: 'Activity Counts',
+                  data: processedData.data,
+                  borderColor: 'rgb(255, 99, 132)',
+                  backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                  tension: 0.4
+                },
+              ],
+            });
+          }
+        })}
 
       fetchActivities()
 
-      const intervalId = setInterval(fetchActivities, 3000);
+      const intervalId = setInterval(fetchActivities, 1000);
 
       // Clear the interval when the component unmounts
       return () => clearInterval(intervalId);
 
     }, [])
 
-  if (!activities){
+  if (!activities || !actualActivities){
     return <div>Loading...</div>
   }
 
@@ -62,13 +144,44 @@ const TablePage = () => {
     ],
   };
 
-
+let color = '#f00'
+  switch (actualStatus){
+    case 2:
+      color = '#ffd800'
+          break;
+    case 3:
+      color = '#0f0'
+  }
   return (
     <div className="tableLayout">
-      <div className="status"><div className="notification"><div className="circle"></div>: Status</div></div>
-      <div className="w-full flex p-[30px]">
-        <div className="w-1/2"> <Doughnut data={data} /></div>
-        <div className="w-1/2"></div>
+      <div className="status"><div className="notification"><div className="circle" style={{backgroundColor: color}}></div>: Status</div></div>
+      <div className="w-full p-[30px]">
+        <div className="w-full flex justify-center mb-2 pb-2 pt-2 border-b-2 border-t-2"> <div className="w-1/2"><Doughnut data={data} /></div></div>
+        <div className="w-full flex items-center">
+          <Line
+              data={actualActivities}
+              options={{
+                scales: {
+                  y: {
+                    ticks: {
+                      callback: function(value, index) {
+                        const reversedMapping: { [key: string]: string } = {
+                          '1': 'asleep',
+                          '2': 'looking_away',
+                          '3': 'distracted',
+                          '4': 'active'
+                        };
+
+                        // Convert value to string and check if it exists in the mapping
+                        const valueStr = value.toString();
+                        return reversedMapping[valueStr] || '';
+                      }
+                    }
+                  }
+                }
+              }}
+          />
+        </div>
       </div>
 
     </div>
