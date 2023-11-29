@@ -164,14 +164,14 @@ const TablePage = () => {
           Status
         </div>
       </div>
-      <div className="w-full p-[30px]">
+      <div className="w-full p-[30px] flex items-center flex-col">
         <div className="h-screen w-full flex justify-center mb-2 p-[50px] border-b-2 border-t-2">
           {" "}
-          <div className=" w-full flex justify-center">
+          <div className=" w-full flex justify-center pt">
             <Doughnut data={data} />
           </div>
         </div>
-        <div className="w-full flex items-center justify-center p-[50px]">
+        <div className="w-8/12 flex items-center justify-center pt-[50px]">
           <Line
             data={actualActivities}
             options={{
