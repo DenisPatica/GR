@@ -4,9 +4,7 @@ import "./videoPage.css";
 const videoPage = () => {
   return (
     <div className="Page_Container">
-      <video className="Video_Feed" autoPlay controls src="http://192.168.137.216:5000">
-        
-      </video>
+      <iframe className="Video_Feed" src="http://192.168.127.168:5000"></iframe>
     </div>
   );
 };

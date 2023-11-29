@@ -1,18 +1,14 @@
 import * as React from "react";
 import "./App.css";
-import TablePage from "./pages/TablePage/TablePage";
-import VideoPage from "./pages/VideoPage/videoPage";
 import { Route, Routes } from "react-router-dom";
-import Sidebar from "./components/Sidebar/Sidebar";
+
+import MainPage from "./pages/MainPage/mainPage";
 
 function App() {
   return (
-    <Sidebar>
       <Routes>
-        <Route path="/" element={<VideoPage />} />
-        <Route path="/tabel" element={<TablePage />} />
+        <Route path="/" element={<MainPage />} />
       </Routes>
-    </Sidebar>
   );
 }
 

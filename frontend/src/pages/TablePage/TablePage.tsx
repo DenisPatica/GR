@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -7,20 +7,20 @@ import {
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement
+  LineElement,
 } from "chart.js";
 import { Doughnut, Line } from "react-chartjs-2";
-import {getActivities, getActualActivities} from "../../api/activities";
+import { getActivities, getActualActivities } from "../../api/activities";
 import "./tablePage.css";
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    LineElement,
-    PointElement,
-    ArcElement,
-    Tooltip,
-    Legend
+  CategoryScale,
+  LinearScale,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Tooltip,
+  Legend
 );
 
 interface ActivityItem {
@@ -39,79 +39,83 @@ function processActivitiesData(activities: ActivityItem[]): ProcessedData {
   const timeLabels: string[] = [];
   const activityData: (string | number)[] = [];
 
-  activities.forEach(activity => {
+  activities.forEach((activity) => {
     const activityTime = new Date(activity.createdAt);
 
-      const timeLabel = activityTime.toLocaleTimeString();
+    const timeLabel = activityTime.toLocaleTimeString();
 
-      if (!timeLabels.includes(timeLabel)) {
-        timeLabels.push(timeLabel);
-      }
+    if (!timeLabels.includes(timeLabel)) {
+      timeLabels.push(timeLabel);
+    }
 
-      const activityValue = mapActivityTypeToValue(activity.activitiesType);
-      activityData.push(activityValue);
-
+    const activityValue = mapActivityTypeToValue(activity.activitiesType);
+    activityData.push(activityValue);
   });
   return { labels: timeLabels, data: activityData };
 }
 
 function mapActivityTypeToValue(activityType: string): string | number {
   switch (activityType) {
-    case 'asleep':
-      return '1'; // Replace with the actual value you want to display
-    case 'looking_away':
-      return '2';
-    case 'distracted':
-      return '3';
-    case 'active':
-      return '4';
+    case "asleep":
+      return "1"; // Replace with the actual value you want to display
+    case "looking_away":
+      return "2";
+    case "distracted":
+      return "3";
+    case "active":
+      return "4";
     default:
-      return '1';
+      return "1";
   }
 }
 const TablePage = () => {
+  const [activities, setActivities] = useState<any[] | null>(null);
+  const [actualActivities, setActualActivities] = useState<any | null>(null);
+  const [actualStatus, setActualStatus] = useState(1);
 
-  const [activities, setActivities]=useState<any[] | null>(null)
-  const [actualActivities, setActualActivities]=useState<any | null>(null)
-  const [actualStatus, setActualStatus]=useState(1);
+  useEffect(() => {
+    getActivities().then((resp) => setActivities(resp?.data?.activitys));
 
-    useEffect(() => {
-      getActivities().then((resp) => setActivities(resp?.data?.activitys));
+    const fetchActivities = () => {
+      getActualActivities().then((resp) => {
+        const activities = resp?.data?.activities;
+        if (activities) {
+          const processedData = processActivitiesData(activities);
+          const lastValue = activities[activities.length - 1];
+          console.log("lastValue", lastValue);
+          setActualStatus(
+            lastValue.activitiesType === "asleep"
+              ? 1
+              : lastValue.activitiesType === "active"
+              ? 3
+              : 2
+          );
+          setActualActivities({
+            labels: processedData.labels,
+            datasets: [
+              {
+                label: "Activity Counts",
+                data: processedData.data,
+                borderColor: "rgb(255, 99, 132)",
+                backgroundColor: "rgba(255, 99, 132, 0.5)",
+                tension: 0.4,
+              },
+            ],
+          });
+        }
+      });
+    };
 
-      const fetchActivities = () => {
-        getActualActivities().then((resp) => {
-          const activities = resp?.data?.activities;
-          if (activities) {
-            const processedData = processActivitiesData(activities);
-            const lastValue = activities[activities.length - 1];
-            console.log('lastValue', lastValue)
-            setActualStatus(lastValue.activitiesType === 'asleep' ? 1 : lastValue.activitiesType === 'active' ? 3 : 2 )
-            setActualActivities({
-              labels: processedData.labels,
-              datasets: [
-                {
-                  label: 'Activity Counts',
-                  data: processedData.data,
-                  borderColor: 'rgb(255, 99, 132)',
-                  backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                  tension: 0.4
-                },
-              ],
-            });
-          }
-        })}
+    fetchActivities();
 
-      fetchActivities()
+    const intervalId = setInterval(fetchActivities, 1000);
 
-      const intervalId = setInterval(fetchActivities, 1000);
+    // Clear the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, []);
 
-      // Clear the interval when the component unmounts
-      return () => clearInterval(intervalId);
-
-    }, [])
-
-  if (!activities || !actualActivities){
-    return <div>Loading...</div>
+  if (!activities || !actualActivities) {
+    return <div>Loading...</div>;
   }
 
   const data = {
@@ -120,10 +124,10 @@ const TablePage = () => {
       {
         label: "# of Votes",
         data: [
-          activities.find((item) => item?._id === 'distracted')?.count || 0,
-          activities.find((item) => item?._id === 'asleep')?.count || 0,
-          activities.find((item) => item?._id === 'active')?.count || 0,
-          activities.find((item) => item?._id === 'looking_away')?.count || 0,
+          activities.find((item) => item?._id === "distracted")?.count || 0,
+          activities.find((item) => item?._id === "asleep")?.count || 0,
+          activities.find((item) => item?._id === "active")?.count || 0,
+          activities.find((item) => item?._id === "looking_away")?.count || 0,
         ],
         backgroundColor: [
           "rgba(255, 159, 64, 0.8)",
@@ -139,51 +143,60 @@ const TablePage = () => {
         ],
         borderWidth: 2,
         hoverOffset: 4,
-        cutout: '50%',
+        cutout: "50%",
       },
     ],
   };
 
-let color = '#f00'
-  switch (actualStatus){
+  let color = "#f00";
+  switch (actualStatus) {
     case 2:
-      color = '#ffd800'
-          break;
+      color = "#ffd800";
+      break;
     case 3:
-      color = '#0f0'
+      color = "#0f0";
   }
   return (
     <div className="tableLayout">
-      <div className="status"><div className="notification"><div className="circle" style={{backgroundColor: color}}></div>: Status</div></div>
+      <div className="status">
+        <div className="notification">
+          <div className="circle" style={{ backgroundColor: color }}></div>:
+          Status
+        </div>
+      </div>
       <div className="w-full p-[30px]">
-        <div className="w-full flex justify-center mb-2 pb-2 pt-2 border-b-2 border-t-2"> <div className="w-1/2"><Doughnut data={data} /></div></div>
-        <div className="w-full flex items-center">
+        <div className="h-screen w-full flex justify-center mb-2 p-[50px] border-b-2 border-t-2">
+          {" "}
+          <div className=" w-full flex justify-center">
+            <Doughnut data={data} />
+          </div>
+        </div>
+        <div className="w-full flex items-center justify-center p-[50px]">
           <Line
-              data={actualActivities}
-              options={{
-                scales: {
-                  y: {
-                    ticks: {
-                      callback: function(value, index) {
-                        const reversedMapping: { [key: string]: string } = {
-                          '1': 'asleep',
-                          '2': 'looking_away',
-                          '3': 'distracted',
-                          '4': 'active'
-                        };
+            data={actualActivities}
+            options={{
+              scales: {
+                y: {
+                  ticks: {
+                    callback: function (value, index) {
+                      const reversedMapping: { [key: string]: string } = {
+                        "1": "asleep",
+                        "2": "looking_away",
+                        "3": "distracted",
+                        "4": "active",
+                      };
 
-                        // Convert value to string and check if it exists in the mapping
-                        const valueStr = value.toString();
-                        return reversedMapping[valueStr] || '';
-                      }
-                    }
-                  }
-                }
-              }}
+                      // Convert value to string and check if it exists in the mapping
+                      const valueStr = value.toString();
+                      return reversedMapping[valueStr] || "";
+                    },
+                  },
+                },
+              },
+            }}
           />
         </div>
       </div>
-
     </div>
   );
 };
