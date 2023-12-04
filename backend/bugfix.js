@@ -21,15 +21,12 @@ function writeFile(path, data, callback) {
 
 readFile("/Users/mindruandrei/auth-app/backend/input.txt", (err, data) => {
   if (err) {
-    console.log(err);
     return;
   }
   const newData = data.toUpperCase();
   writeFile("output.txt", newData, (err) => {
     if(err) {
-        console.log(err)
         return
     }
-    console.log("File written successfully");
   });
 });
