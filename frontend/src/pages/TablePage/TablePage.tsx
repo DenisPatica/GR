@@ -82,7 +82,6 @@ const TablePage = () => {
         if (activities) {
           const processedData = processActivitiesData(activities);
           const lastValue = activities[activities.length - 1];
-          console.log("lastValue", lastValue);
           setActualStatus(
             lastValue.activitiesType === "asleep"
               ? 1
@@ -110,19 +109,19 @@ const TablePage = () => {
 
     const intervalId = setInterval(fetchActivities, 1000);
 
-    // Clear the interval when the component unmounts
+    // Clear the interval when the component`1 unmounts
     return () => clearInterval(intervalId);
   }, []);
 
   if (!activities || !actualActivities) {
     return <div>Loading...</div>;
-  }
+    }
 
   const data = {
     labels: ["Distracted", "Asleep", "Active", "Looking Away"],
     datasets: [
       {
-        label: "# of Votes",
+        label: "Number",
         data: [
           activities.find((item) => item?._id === "distracted")?.count || 0,
           activities.find((item) => item?._id === "asleep")?.count || 0,
@@ -168,7 +167,25 @@ const TablePage = () => {
         <div className="h-screen w-full flex justify-center mb-2 p-[50px] border-b-2 border-t-2">
           {" "}
           <div className=" w-full flex justify-center pt">
-            <Doughnut data={data} />
+            <Doughnut data={data} options={{
+              scales: {
+             x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Number of times it happened in the last 24 hours',
+                color: '#000000',
+                font: {
+                  family: 'Times',
+                  size: 20,
+                  style: 'normal',
+                  lineHeight: 1.2
+                },
+                padding: {top: 30}
+              }
+            }}}
+            }
+             />
           </div>
         </div>
         <div className="w-8/12 flex items-center justify-center pt-[50px]">
